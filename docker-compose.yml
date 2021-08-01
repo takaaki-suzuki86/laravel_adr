@@ -28,7 +28,7 @@ services:
       - "9000:9000"
     volumes:
       - ./:/var/www/html:cached
-      - ./docker/php-fpm/conf.d/local.ini:/usr/local/etc/php/conf.d/override.ini:ro
+      - ./docker/php-fpm/conf.d/override.ini.local:/usr/local/etc/php/conf.d/override.ini:ro
     depends_on:
       - db
     container_name: php-fpm
