@@ -3,4 +3,4 @@ display_errors = 0
 log_errors = 1
 
 ; opcache
-opcache.enable = 0
+opcache.enable = 1
