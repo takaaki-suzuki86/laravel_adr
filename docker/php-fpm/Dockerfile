@@ -1,4 +1,4 @@
-FROM php:8.0-fpm-alpine
+FROM php:8.0-fpm-alpine3.13
 
 RUN apk upgrade --update \
     && apk --no-cache add icu-dev autoconf make g++ gcc curl libzip-dev
