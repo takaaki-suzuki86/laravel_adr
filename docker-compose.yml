@@ -5,7 +5,8 @@ services:
       context: .
       dockerfile: ./docker/nginx/Dockerfile
     ports:
-      - "8000:80"
+      - "80:80"
+      - "443:443"
     volumes:
       - ./public:/var/www/html:cached
     depends_on:
@@ -44,3 +45,7 @@ services:
     volumes:
       - ./docker/db/data:/var/lib/mysql
     container_name: db
+networks:
+    default:
+        external:
+            name: engage-user
