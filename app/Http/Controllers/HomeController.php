@@ -41,5 +41,6 @@ class HomeController
         $average = number_format($all_time / self::TEST_COUNT, self::DECIMAL_DIGITS);
         echo '平均:'.$average.'秒';
     }
+============
 
 }
