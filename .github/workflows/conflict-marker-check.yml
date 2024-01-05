@@ -11,7 +11,7 @@ jobs:
 
       - name: Check for merge markers in all files
         run: |
-          if grep -rE '[><=]{7}' --exclude-dir=.git --line-number .; then
+          if grep -rE '(^=======$|<<<<<<<|>>>>>>>)' --exclude-dir=.git --line-number .; then
             echo "Merge markers found."
             exit 1
           else
