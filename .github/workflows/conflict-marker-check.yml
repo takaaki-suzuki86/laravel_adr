@@ -7,20 +7,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Fetch all history for all tags and branches
         run: git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
 
       - name: Get list of changed files
+        # PRのベースブランチとHEADブランチの差分ファイルを取得し環境変数に格納
         run: |
           echo "FILES<<EOF" >> $GITHUB_ENV
           git diff --name-only origin/${{ github.base_ref }} origin/${{ github.head_ref }} >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
-      - name: Check for merge markers in changed files
+      - name: Check for conflict markers in changed files
+        # 除外ファイルパターンに当てはまるファイルはSKIPし、それ以外のファイルに対してconflict markerが含まれていないかチェック
         run: |
-          EXCLUDE_PATTERNS=(".github/workflows/*" "node_modules/*" "*.png" "*.ttf" "*.woff" "*.eot" "*.jpg" "*.gif")
+          EXCLUDE_PATTERNS=(".github/workflows/*" "*.jpg" "*.gif" "*.png" "*.ttf" "*.ico" "*.woff" "*.eot" )
           FLAG=0
 
           while read FILE; do
@@ -51,4 +53,4 @@ jobs:
             exit 1
           fi
 
-          echo "✅ No merge markers found in changed files."
+          echo "✅ No conflict markers found in changed files."
