@@ -1,17 +1,19 @@
-name: Conflict Marker Check
+name: Merge Marker Check
 
 on: [pull_request]
 
 jobs:
-  check-conflict-markers:
+  check-merge-markers:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Check for conflict markers
+      - name: Check for merge markers in all files
         run: |
-          if grep -qE '<<<<<<<|=======|>>>>>>>' $(git ls-files); then
-            echo "Conflict markers found."
+          if grep -rE '[><=]{7}' --exclude-dir=.git --line-number .; then
+            echo "Merge markers found."
             exit 1
+          else
+            echo "No merge markers found."
           fi
