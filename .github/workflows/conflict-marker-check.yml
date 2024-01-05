@@ -6,11 +6,13 @@ jobs:
   check-merge-markers:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v3
-
-      - name: Fetch all history for all tags and branches
-        run: git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+#      - name: Fetch all history for all tags and branches
+#        run: git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
 
       - name: Get list of changed files
         # PRのベースブランチとHEADブランチの差分ファイルを取得し環境変数に格納
