@@ -10,17 +10,18 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Get list of changed files
-        id: files
         run: |
-          echo "::set-output name=list::$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})"
+          echo "FILES<<EOF" >> $GITHUB_ENV
+          git diff --name-only origin/${{ github.base_ref }} origin/${{ github.head_ref }} >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Check for merge markers in changed files
         run: |
-          FILES=${{ steps.files.outputs.list }}
-          EXCLUDE_PATTERNS=".github/workflows/* node_modules/* *.jpg *.gif *.png *.ttf *.woff *.eot"
+          EXCLUDE_PATTERNS=".github/workflows/* node_modules/* *.png *.ttf *.woff *.eot"
           FLAG=0
 
-          for FILE in $FILES; do
+          while read FILE; do
+            if [[ $FILE == "" ]]; then continue; fi
             if echo $EXCLUDE_PATTERNS | grep -q $FILE; then
               echo "SKIP $FILE"
               continue
@@ -31,7 +32,7 @@ jobs:
             else
               echo "OK for $FILE"
             fi
-          done
+          done <<< "$FILES"
 
           if [ $FLAG -eq 1 ]; then
             exit 1
