@@ -23,22 +23,22 @@ jobs:
           EXCLUDE_PATTERNS=".github/workflows/* node_modules/* *.png *.ttf *.woff *.eot"
           FLAG=0
 
-          while read FILE; do
-            if [[ $FILE == "" ]]; then continue; fi
-            if echo $EXCLUDE_PATTERNS | grep -q $FILE; then
-              echo "SKIP $FILE"
-              continue
-            fi
-            if grep -E '(^=======$|<<<<<<<|>>>>>>>)' $FILE --line-number -I; then
-              echo "NG in $FILE"
-              FLAG=1
-            else
-              echo "OK for $FILE"
-            fi
-          done <<< "$FILES"
+        while read FILE; do
+        if [[ $FILE == "" ]]; then continue; fi
+        if echo $EXCLUDE_PATTERNS | grep -q $FILE; then
+        echo "SKIP $FILE"
+        continue
+        fi
+        if grep -E '(^=======$|<<<<<<<|>>>>>>>)' $FILE --line-number -I; then
+        echo "✘ NG in $FILE"
+        FLAG=1
+        else
+        echo "✓ OK for $FILE"
+        fi
+        done <<< "$FILES"
 
-          if [ $FLAG -eq 1 ]; then
-            exit 1
-          fi
+        if [ $FLAG -eq 1 ]; then
+        exit 1
+        fi
 
-          echo "No merge markers found in changed files."
+        echo "✓ No merge markers found in changed files."
