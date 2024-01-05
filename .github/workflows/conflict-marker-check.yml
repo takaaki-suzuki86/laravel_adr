@@ -1,4 +1,4 @@
-name: Merge Marker Check
+name: Merge Marker Check on Changed Files
 
 on: [pull_request]
 
@@ -9,11 +9,32 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Check for merge markers in all files
+      - name: Get list of changed files
+        id: files
         run: |
-          if grep -rE '(^=======$|<<<<<<<|>>>>>>>)' --exclude-dir=.git --line-number .; then
-            echo "Merge markers found."
+          echo "::set-output name=list::$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})"
+
+      - name: Check for merge markers in changed files
+        run: |
+          FILES=${{ steps.files.outputs.list }}
+          EXCLUDE_PATTERNS=".github/workflows/* node_modules/* *.jpg *.gif *.png *.ttf *.woff *.eot"
+          FLAG=0
+
+          for FILE in $FILES; do
+            if echo $EXCLUDE_PATTERNS | grep -q $FILE; then
+              echo "SKIP $FILE"
+              continue
+            fi
+            if grep -E '(^=======$|<<<<<<<|>>>>>>>)' $FILE --line-number -I; then
+              echo "NG in $FILE"
+              FLAG=1
+            else
+              echo "OK for $FILE"
+            fi
+          done
+
+          if [ $FLAG -eq 1 ]; then
             exit 1
-          else
-            echo "No merge markers found."
           fi
+
+          echo "No merge markers found in changed files."
