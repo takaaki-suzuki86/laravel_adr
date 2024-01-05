@@ -17,17 +17,28 @@ jobs:
           echo "FILES<<EOF" >> $GITHUB_ENV
           git diff --name-only origin/${{ github.base_ref }} origin/${{ github.head_ref }} >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
+
       - name: Check for merge markers in changed files
         run: |
-          EXCLUDE_PATTERNS=".github/workflows/* node_modules/* *.png *.ttf *.woff *.eot"
+          EXCLUDE_PATTERNS=(".github/workflows/*" "node_modules/*" "*.png" "*.ttf" "*.woff" "*.eot" "*.jpg" "*.gif")
           FLAG=0
 
           while read FILE; do
             if [[ $FILE == "" ]]; then continue; fi
-            if echo $EXCLUDE_PATTERNS | grep -q $FILE; then
+
+            SKIP=false
+            for PATTERN in "${EXCLUDE_PATTERNS[@]}"; do
+              if [[ $FILE == $PATTERN ]]; then
+                SKIP=true
+                break
+              fi
+            done
+
+            if [[ $SKIP == true ]]; then
               echo "⏩ SKIP $FILE"
               continue
             fi
+
             if grep -E '(^=======$|<<<<<<<|>>>>>>>)' $FILE --line-number -I; then
               echo "❌ NG in $FILE"
               FLAG=1
