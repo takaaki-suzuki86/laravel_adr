@@ -34,9 +34,12 @@ class HomeController
             $test_time = $end - $start;
             $all_time += $test_time;
         }
+        <<<<<<< HEAD
+        echo "\n\n";
+=======
+>>>>>>> main
         $average = number_format($all_time / self::TEST_COUNT, self::DECIMAL_DIGITS);
         echo '平均:'.$average.'秒';
-
     }
 
 }
