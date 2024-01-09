@@ -3,15 +3,52 @@ name: Conflict Marker Check
 on: [pull_request]
 
 jobs:
-  check-conflict-markers:
+  check-conflict-marker:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Check for conflict markers
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Get list of changed files
+        # mainブランチとPRのHEADブランチの差分ファイルを取得し環境変数に格納
         run: |
-          if grep -qE '<<<<<<<|=======|>>>>>>>' $(git ls-files); then
-            echo "Conflict markers found."
+          echo "FILES<<EOF" >> $GITHUB_ENV
+          git diff --name-only $(git merge-base origin/${{ github.base_ref }} origin/${{ github.head_ref }}) origin/${{ github.head_ref }}  >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+      - name: Check for conflict markers in changed files
+        # 除外ファイルパターンに当てはまるファイルはSKIPし、それ以外のファイルに対してconflict markerが含まれていないかチェック
+        run: |
+          EXCLUDE_PATTERNS=(".github/workflows/*" "*.jpg" "*.gif" "*.png" "*.ttf" "*.ico" "*.woff" "*.eot" )
+          FLAG=0
+
+          while read FILE; do
+            if [[ $FILE == "" ]]; then continue; fi
+
+            SKIP=false
+            for PATTERN in "${EXCLUDE_PATTERNS[@]}"; do
+              if [[ $FILE == $PATTERN ]]; then
+                SKIP=true
+                break
+              fi
+            done
+
+            if [[ $SKIP == true ]]; then
+              echo "⏩ SKIP $FILE"
+              continue
+            fi
+
+            if grep -E '(^=======$|<<<<<<<|>>>>>>>)' $FILE --line-number -I; then
+              echo "❌ NG in $FILE"
+              FLAG=1
+            else
+              echo "✅ OK for $FILE"
+            fi
+          done <<< "$FILES"
+
+          if [ $FLAG -eq 1 ]; then
             exit 1
           fi
+
+          echo "✅ No conflict markers found in changed files."
