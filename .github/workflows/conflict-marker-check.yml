@@ -1,9 +1,9 @@
-name: Merge Marker Check on Changed Files
+name: Conflict Marker Check
 
 on: [pull_request]
 
 jobs:
-  check-merge-markers:
+  check-conflict-marker:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -11,16 +11,12 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
-#      - name: Fetch all history for all tags and branches
-#        run: git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
-
       - name: Get list of changed files
-        # PRのベースブランチとHEADブランチの差分ファイルを取得し環境変数に格納
+        # mainブランチとPRのHEADブランチの差分ファイルを取得し環境変数に格納
         run: |
           echo "FILES<<EOF" >> $GITHUB_ENV
-          git diff --name-only origin/${{ github.base_ref }} origin/${{ github.head_ref }} >> $GITHUB_ENV
+          git diff --name-only $(git merge-base origin/${{ github.base_ref }} origin/${{ github.head_ref }}) origin/${{ github.head_ref }}  >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
-
       - name: Check for conflict markers in changed files
         # 除外ファイルパターンに当てはまるファイルはSKIPし、それ以外のファイルに対してconflict markerが含まれていないかチェック
         run: |
