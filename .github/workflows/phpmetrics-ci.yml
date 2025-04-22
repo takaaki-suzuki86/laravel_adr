@@ -1,0 +1,89 @@
+name: PHP Metrics Violation Check
+
+on:
+  pull_request:
+    paths:
+      - '**/*.php'
+  workflow_dispatch:
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+
+      - name: Install PhpMetrics
+        run: composer global require phpmetrics/phpmetrics:^2.0
+
+      - name: Install xmlstarlet
+        run: sudo apt-get update && sudo apt-get install -y xmlstarlet
+
+      - name: Generate PhpMetrics config for diff files
+        run: |
+          FILES=$(git diff --name-only origin/${{ github.base_ref }} ${{ github.sha }} | grep '\.php$' || true)
+          if [[ -z "$FILES" ]]; then
+          echo "No PHP files changed. Skipping PhpMetrics."
+          echo '{}' > phpmetrics-diff.json
+          exit 0
+          fi
+
+          echo "$FILES" | jq -R . | jq -s '{includes: ., report: {violations: "./tmp/phpmetrics/violations.xml"}}' > phpmetrics-diff.json
+
+      - name: Generate PhpMetrics Report
+        run: |
+          mkdir -p ./tmp/phpmetrics
+          php -d memory_limit=-1 ~/.composer/vendor/bin/phpmetrics \
+            --config=phpmetrics.json
+
+      - name: Extract targeted violations
+        run: |
+          if [[ -s ./phpmetrics-comment.txt ]]; then
+            echo "PhpMetrics violations found"
+          else
+            echo "🎉 No PhpMetrics violations found" > ./phpmetrics-comment.txt
+          fi
+      - name: Generate PhpMetrics Report
+        run: |
+          mkdir -p ./tmp/phpmetrics
+          php -d memory_limit=-1 ~/.composer/vendor/bin/phpmetrics \
+            --config=phpmetrics-diff.json
+
+      - name: Extract targeted violations
+        run: |
+          RULES=("Too complex class code" "Too complex method code")
+          XPATH_RULES=""
+          for RULE in "${RULES[@]}"; do
+          [[ -n "$XPATH_RULES" ]] && XPATH_RULES="${XPATH_RULES} or "
+          XPATH_RULES="${XPATH_RULES}@rule='${RULE}'"
+          done
+          xmlstarlet sel -t \
+          -m "//file[violation[$XPATH_RULES]]" \
+          -v "concat('📄 ', @name)" -n \
+          -m "violation[$XPATH_RULES]" \
+          -v "concat('🔸 **', @rule, '** (priority ', @priority, ') at line ', @beginline)" -n \
+          -v "normalize-space(substring-before(., 'Maybe'))" -n \
+          -v "concat('- ', normalize-space(substring(., string-length(substring-before(., 'Maybe')) + 1)))" -n \
+          -n \
+          ./docs/phpmetrics/violations.xml > ./phpmetrics-comment.txt
+
+          if [[ -s ./phpmetrics-comment.txt ]]; then
+            echo "PhpMetrics violations found"
+          else
+            echo "🎉 No PhpMetrics violations found" > ./phpmetrics-comment.txt
+          fi
+
+      - name: Post PhpMetrics comment to PR
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          path: ./phpmetrics-comment.txt

@@ -3,6 +3,7 @@
     "app"
   ],
   "report": {
-    "html": "./docs/phpmetrics"
+    "html": "./docs/phpmetrics",
+    "violations": "./docs/phpmetrics/violations.xml"
   }
 }
