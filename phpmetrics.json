@@ -3,6 +3,19 @@
     "app"
   ],
   "report": {
-    "html": "./docs/phpmetrics"
-  }
+    "html": "./docs/phpmetrics",
+    "violations": "./docs/phpmetrics/violations.xml"
+  },
+    "searches": {
+        "Class too complex": {
+            "type": "class",
+            "ccn": ">=50",
+            "failIfFound": true
+        },
+        "Too complex methods": {
+            "type": "class",
+            "ccnMethodMax": ">=10",
+            "failIfFound": true
+        }
+    }
 }
