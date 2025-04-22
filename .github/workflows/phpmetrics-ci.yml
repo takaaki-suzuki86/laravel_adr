@@ -37,7 +37,7 @@ jobs:
           exit 0
           fi
 
-          echo "$FILES" | jq -R . | jq -s '{includes: ., report: {violations: "./tmp/phpmetrics/violations.xml"}}' > phpmetrics-diff.json
+          echo "$FILES" | jq -R . | jq -s '{includes: ., report: {violations: "./docs/phpmetrics/violations.xml"}}' > phpmetrics-diff.json
 
       - name: Generate PhpMetrics Report
         run: |
