@@ -9,7 +9,8 @@ on:
 jobs:
   analyze:
     runs-on: ubuntu-latest
-
+    if: |
+      github.event_name == 'push' && startsWith(github.ref_name, 'feature/DEL-') || github.event_name == 'pull_request' && startsWith(github.head_ref, 'feature/DEL-')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
