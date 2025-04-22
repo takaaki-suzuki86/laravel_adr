@@ -36,14 +36,20 @@ jobs:
 
       - name: Extract targeted violations
         run: |
+          RULES=("Too complex class code" "Too complex method code")
+          XPATH_RULES=""
+          for RULE in "${RULES[@]}"; do
+          [[ -n "$XPATH_RULES" ]] && XPATH_RULES="${XPATH_RULES} or "
+          XPATH_RULES="${XPATH_RULES}@rule='${RULE}'"
+          done
+
           xmlstarlet sel -t \
-            -m "//file" \
-            -v "concat('📄 ', @name)" -n \
-            -m "violation[@rule='Too complex class code' or @rule='Too complex method code']" \
-            -v "concat('🔸 ', @rule, ' (priority ', @priority, ') at line ', @beginline)" -n \
-            -v "normalize-space(.)" -n \
-            ./tmp/phpmetrics/violations.xml \
-            | sed 's/\* /- /g' > ./phpmetrics-comment.txt
+          -m "//file[violation[$XPATH_RULES]]" \
+          -v "concat('📄 ', @name)" -n \
+          -m "violation[$XPATH_RULES]" \
+          -v "concat('🔸 ', @rule, ' (priority ', @priority, ') at line ', @beginline)" -n \
+          -v "normalize-space(.)" -n \
+          ./docs/phpmetrics/violations.xml | sed 's/\* /- /g' > ./phpmetrics-comment.txt
 
       - name: Post PhpMetrics comment to PR
         if: github.event_name == 'pull_request'
