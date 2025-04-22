@@ -9,24 +9,13 @@ on:
 jobs:
   analyze:
     runs-on: ubuntu-latest
-
+    if: |
+      github.event_name == 'push' && startsWith(github.ref_name, 'feature/DEL-') || github.event_name == 'pull_request' && startsWith(github.head_ref, 'feature/DEL-')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          tools: composer
-
-      - name: Install PhpMetrics
-        run: composer global require phpmetrics/phpmetrics:^2.0
-
-      - name: Install xmlstarlet
-        run: sudo apt-get update && sudo apt-get install -y xmlstarlet
 
       - name: Check if Modules PHP files are changed
         id: check_modules
@@ -41,25 +30,39 @@ jobs:
           echo "modules_changed=true" >> $GITHUB_OUTPUT
           fi
 
-      # 対象差分がなければ終了
-      - name: Skip job if no modules changed
-        if: steps.check_modules.outputs.modules_changed == 'false'
-        run: exit 0
+      - name: Setup PHP
+        if: steps.check_modules.outputs.modules_changed == 'true'
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+
+      - name: Install PhpMetrics
+        if: steps.check_modules.outputs.modules_changed == 'true'
+        run: composer global require phpmetrics/phpmetrics:^2.0
+
+      - name: Install xmlstarlet
+        if: steps.check_modules.outputs.modules_changed == 'true'
+        run: sudo apt-get update && sudo apt-get install -y xmlstarlet
+
 
       # 差分ファイルのみをチェックするために、設定ファイルを生成する
       - name: Generate PhpMetrics config for diff files
+        if: steps.check_modules.outputs.modules_changed == 'true'
         run: |
           echo "差分のうちModules配下のPHPファイルのみを取得"
           FILES=$(git diff --name-only origin/${{ github.base_ref }} ${{ github.sha }} | grep '^Modules/.*\.php$')
           echo "$FILES" | jq -R . | jq -s '{includes: ., report: {violations: "./docs/phpmetrics/violations.xml"}}' > phpmetrics-diff.json
 
       - name: Generate PhpMetrics Report
+        if: steps.check_modules.outputs.modules_changed == 'true'
         run: |
           mkdir -p ./tmp/phpmetrics
           php -d memory_limit=-1 ~/.composer/vendor/bin/phpmetrics \
             --config=phpmetrics-diff.json
 
       - name: Extract targeted violations
+        if: steps.check_modules.outputs.modules_changed == 'true'
         run: |
           echo "違反数が空でないか確認"
           COUNT=$(xmlstarlet sel -t -v "count(//file/violation)" ./docs/phpmetrics/violations.xml)
@@ -91,7 +94,7 @@ jobs:
           fi
 
       - name: Post PhpMetrics comment to PR
-        if: github.event_name == 'pull_request'
+        if: steps.check_modules.outputs.modules_changed == 'true'
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           path: ./phpmetrics-comment.txt
