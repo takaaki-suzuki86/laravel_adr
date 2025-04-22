@@ -30,7 +30,7 @@ jobs:
       # 差分ファイルのみをチェックするために、設定ファイルを生成する
       - name: Generate PhpMetrics config for diff files
         run: |
-          FILES=$(git diff --name-only origin/${{ github.base_ref }} ${{ github.sha }} | grep '\.php$' || true)
+          FILES=$(git diff --name-only origin/${{ github.base_ref }} ${{ github.sha }} | grep '^Modules/.*\.php$' || true)
           if [[ -z "$FILES" ]]; then
           echo "No PHP files changed. Skipping PhpMetrics."
           echo '{}' > phpmetrics-diff.json
