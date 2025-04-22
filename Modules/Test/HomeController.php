@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Modules\Test;
 
 class HomeController
 {
@@ -22,8 +22,8 @@ class HomeController
                     // 意味のない処理
                     $num++;
                     $temp = self::EXEC_COUNT / self::EXEC_COUNT * $i;
-                    $collection = collect($array);
-                    $request = request();
+                    $collection = \App\Http\Controllers\collect($array);
+                    $request = \App\Http\Controllers\request();
                 }
 
             }
@@ -34,8 +34,6 @@ class HomeController
         }
         $average = number_format($all_time / self::TEST_COUNT, self::DECIMAL_DIGITS);
         echo '平均:' . $average . '秒';
-        $this->triggerViolation();
-        $this->dummyWithHighCCN();
     }
 
     public function triggerViolation(): void
