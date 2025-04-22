@@ -1,0 +1,58 @@
+name: PHP Metrics Report
+
+on:
+  push:
+    branches:
+      - develop
+
+  workflow_dispatch:
+
+concurrency:
+  group: "phpmetrics-pages"
+  cancel-in-progress: true
+
+jobs:
+  generate-metrics:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+
+      - name: Install phpmetrics
+        run: composer global require phpmetrics/phpmetrics:^2.0
+
+      - name: Generate PHP Metrics Report
+        run: |
+          mkdir -p ./docs/phpmetrics
+          php -d memory_limit=-1 ~/.composer/vendor/bin/phpmetrics \
+            --config=phpmetrics.json
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./docs
+
+  deploy:
+    needs: generate-metrics
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
+        id: deployment

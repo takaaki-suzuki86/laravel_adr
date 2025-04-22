@@ -1,0 +1,8 @@
+{
+  "includes": [
+    "app"
+  ],
+  "report": {
+    "html": "./docs/phpmetrics"
+  }
+}
