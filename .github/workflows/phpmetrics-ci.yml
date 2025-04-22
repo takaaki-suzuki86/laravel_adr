@@ -47,10 +47,12 @@ jobs:
 
       - name: Extract targeted violations
         run: |
+          echo "違反数が空でないか確認"
           COUNT=$(xmlstarlet sel -t -v "count(//file/violation)" ./docs/phpmetrics/violations.xml)
           if [[ "$COUNT" -eq 0 ]]; then
             echo "🎉 No PhpMetrics violations found" > ./phpmetrics-comment.txt
           else
+            echo "ルールを定義してバイオレーション抽出"
             RULES=("Too complex class code" "Too complex method code")
             XPATH_RULES=""
             for RULE in "${RULES[@]}"; do
@@ -58,6 +60,7 @@ jobs:
             XPATH_RULES="${XPATH_RULES}@rule='${RULE}'"
             done
 
+            echo "該当バイオレーションを抽出してコメントファイル作成"
             xmlstarlet sel -t \
             -m "//file[violation[$XPATH_RULES]]" \
             -v "concat('📄 ', @name)" -n \
