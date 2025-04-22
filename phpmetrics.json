@@ -1,7 +1,6 @@
 {
   "includes": [
-    "app/Http/Controllers/HomeController.php",
-    "app/Http/Controllers/ViolationController.php"
+    "app"
   ],
   "report": {
     "html": "./docs/phpmetrics",
