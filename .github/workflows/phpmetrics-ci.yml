@@ -36,21 +36,28 @@ jobs:
 
       - name: Extract targeted violations
         run: |
-          RULES=("Too complex class code" "Too complex method code")
-          XPATH_RULES=""
-          for RULE in "${RULES[@]}"; do
-          [[ -n "$XPATH_RULES" ]] && XPATH_RULES="${XPATH_RULES} or "
-          XPATH_RULES="${XPATH_RULES}@rule='${RULE}'"
-          done
-
-          xmlstarlet sel -t \
-          -m "//file[violation[$XPATH_RULES]]" \
-          -v "concat('📄 ', @name, '&#10;')" \
-          -m "violation[$XPATH_RULES]" \
-          -v "concat('🔸 **', @rule, '** (priority ', @priority, ') at line ', @beginline, '&#10;')" \
-          -v "normalize-space(.)" \
-          -v '&#10;&#10;' \
-          ./docs/phpmetrics/violations.xml | sed 's/\* /- /g' > ./phpmetrics-comment.txt
+#          RULES=("Too complex class code" "Too complex method code")
+#          XPATH_RULES=""
+#          for RULE in "${RULES[@]}"; do
+#          [[ -n "$XPATH_RULES" ]] && XPATH_RULES="${XPATH_RULES} or "
+#          XPATH_RULES="${XPATH_RULES}@rule='${RULE}'"
+#          done
+#
+#          xmlstarlet sel -t \
+#          -m "//file[violation[$XPATH_RULES]]" \
+#          -v "concat('📄 ', @name)" -n \
+#          -m "violation[$XPATH_RULES]" \
+#          -v "concat('🔸 **', @rule, '** (priority ', @priority, ') at line ', @beginline)" -n \
+#          -v "normalize-space(substring-before(., 'Maybe'))" -n \
+#          -v "concat('- ', normalize-space(substring(., string-length(substring-before(., 'Maybe')) + 1)))" -n \
+#          -n \
+#          ./docs/phpmetrics/violations.xml > ./phpmetrics-comment.txt
+#
+          if [[ -s ./phpmetrics-comment.txt ]]; then
+            echo "PhpMetrics violations found"
+          else
+            echo "🎉 No PhpMetrics violations found" > ./phpmetrics-comment.txt
+          fi
 
       - name: Post PhpMetrics comment to PR
         if: github.event_name == 'pull_request'
