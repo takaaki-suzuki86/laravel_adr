@@ -44,23 +44,26 @@ jobs:
 
       # 対象差分がなければ終了
       - name: Skip job if no modules changed
-        if: steps.check_modules.outputs.modules_changed == 'false'
+        if: steps.check_modules.outputs.modules_changed == 'true'
         run: exit 0
 
       # 差分ファイルのみをチェックするために、設定ファイルを生成する
       - name: Generate PhpMetrics config for diff files
+        if: steps.check_modules.outputs.modules_changed == 'true'
         run: |
           echo "差分のうちModules配下のPHPファイルのみを取得"
           FILES=$(git diff --name-only origin/${{ github.base_ref }} ${{ github.sha }} | grep '^Modules/.*\.php$')
           echo "$FILES" | jq -R . | jq -s '{includes: ., report: {violations: "./docs/phpmetrics/violations.xml"}}' > phpmetrics-diff.json
 
       - name: Generate PhpMetrics Report
+        if: steps.check_modules.outputs.modules_changed == 'true'
         run: |
           mkdir -p ./tmp/phpmetrics
           php -d memory_limit=-1 ~/.composer/vendor/bin/phpmetrics \
             --config=phpmetrics-diff.json
 
       - name: Extract targeted violations
+        if: steps.check_modules.outputs.modules_changed == 'true'
         run: |
           echo "違反数が空でないか確認"
           COUNT=$(xmlstarlet sel -t -v "count(//file/violation)" ./docs/phpmetrics/violations.xml)
@@ -92,7 +95,7 @@ jobs:
           fi
 
       - name: Post PhpMetrics comment to PR
-        if: github.event_name == 'pull_request'
+        if: steps.check_modules.outputs.modules_changed == 'true'
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           path: ./phpmetrics-comment.txt
