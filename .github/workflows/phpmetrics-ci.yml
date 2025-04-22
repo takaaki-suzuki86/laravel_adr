@@ -67,9 +67,7 @@ jobs:
             -n \
             ./docs/phpmetrics/violations.xml > ./phpmetrics-comment.txt
 
-            if [[ -s ./phpmetrics-comment.txt ]]; then
-              echo "PhpMetrics violations found"
-            else
+            if [[ ! -s ./phpmetrics-comment.txt ]]; then
               echo "🎉 No PhpMetrics violations found" > ./phpmetrics-comment.txt
             fi
           fi
