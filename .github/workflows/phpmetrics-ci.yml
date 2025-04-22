@@ -27,7 +27,7 @@ jobs:
 
       - name: Install xmlstarlet
         run: sudo apt-get update && sudo apt-get install -y xmlstarlet
-
+      # 差分ファイルのみをチェックするために、設定ファイルを生成する
       - name: Generate PhpMetrics config for diff files
         run: |
           FILES=$(git diff --name-only origin/${{ github.base_ref }} ${{ github.sha }} | grep '\.php$' || true)
@@ -47,16 +47,20 @@ jobs:
 
       - name: Extract targeted violations
         run: |
+          # コメント：違反数が空でないか確認
           COUNT=$(xmlstarlet sel -t -v "count(//file/violation)" ./docs/phpmetrics/violations.xml)
           if [[ "$COUNT" -eq 0 ]]; then
             echo "🎉 No PhpMetrics violations found" > ./phpmetrics-comment.txt
           else
+            # ルールを定義してバイオレーション抽出
             RULES=("Too complex class code" "Too complex method code")
             XPATH_RULES=""
             for RULE in "${RULES[@]}"; do
             [[ -n "$XPATH_RULES" ]] && XPATH_RULES="${XPATH_RULES} or "
             XPATH_RULES="${XPATH_RULES}@rule='${RULE}'"
             done
+
+            # 該当バイオレーションを抽出してコメントファイル作成
             xmlstarlet sel -t \
             -m "//file[violation[$XPATH_RULES]]" \
             -v "concat('📄 ', @name)" -n \

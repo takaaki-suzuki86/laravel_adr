@@ -1,5 +1,6 @@
 <?php
 
+namespace Modules\Test;
 
 class HomeController
 {
