@@ -37,6 +37,7 @@ jobs:
           echo "modules_changed=false" >> $GITHUB_OUTPUT
           else
           echo "Modules PHP files changed:"
+          echo "$FILES"
           echo "modules_changed=true" >> $GITHUB_OUTPUT
           fi
 
