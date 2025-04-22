@@ -27,17 +27,29 @@ jobs:
 
       - name: Install xmlstarlet
         run: sudo apt-get update && sudo apt-get install -y xmlstarlet
+
+      - name: Check if Modules PHP files are changed
+        id: check_modules
+        run: |
+          FILES=$(git diff --name-only origin/${{ github.base_ref }} ${{ github.sha }} | grep '^Modules/.*\.php$' || true)
+          if [[ -z "$FILES" ]]; then
+          echo "Modules PHP files not changed."
+          echo "modules_changed=false" >> $GITHUB_OUTPUT
+          else
+          echo "Modules PHP files changed:"
+          echo "modules_changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      # 対象差分がなければ終了
+      - name: Skip job if no modules changed
+        if: steps.check_modules.outputs.modules_changed == 'false'
+        run: exit 0
+
       # 差分ファイルのみをチェックするために、設定ファイルを生成する
       - name: Generate PhpMetrics config for diff files
         run: |
           echo "差分のうちModules配下のPHPファイルのみを取得"
-          FILES=$(git diff --name-only origin/${{ github.base_ref }} ${{ github.sha }} | grep '^Modules/.*\.php$' || true)
-          if [[ -z "$FILES" ]]; then
-          echo "No PHP files changed. Skipping PhpMetrics."
-          echo '{}' > phpmetrics-diff.json
-          exit 0
-          fi
-
+          FILES=$(git diff --name-only origin/${{ github.base_ref }} ${{ github.sha }} | grep '^Modules/.*\.php$')
           echo "$FILES" | jq -R . | jq -s '{includes: ., report: {violations: "./docs/phpmetrics/violations.xml"}}' > phpmetrics-diff.json
 
       - name: Generate PhpMetrics Report
@@ -81,5 +93,4 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: marocchino/sticky-pull-request-comment@v2
         with:
-#          path: ./docs/phpmetrics/violations.xml
           path: ./phpmetrics-comment.txt
