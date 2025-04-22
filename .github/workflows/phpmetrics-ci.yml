@@ -45,13 +45,12 @@ jobs:
 
           xmlstarlet sel -t \
           -m "//file[violation[$XPATH_RULES]]" \
-          -v "concat('📄 ', @name)" -n \
+          -v "concat('📄 ', @name, '&#10;')" \
           -m "violation[$XPATH_RULES]" \
-          -v "concat('🔸 **', @rule, '** (priority ', @priority, ') at line ', @beginline, '\n')" -n \
-          -v "normalize-space(substring-before(., 'Maybe'))" -n \
-          -v "concat('- ', normalize-space(substring(., string-length(substring-before(., 'Maybe')) + 1)))" -n \
-          -n \
-          ./docs/phpmetrics/violations.xml > ./phpmetrics-comment.txt
+          -v "concat('🔸 **', @rule, '** (priority ', @priority, ') at line ', @beginline, '&#10;')" \
+          -v "normalize-space(.)" \
+          -v '&#10;&#10;' \
+          ./docs/phpmetrics/violations.xml | sed 's/\* /- /g' > ./phpmetrics-comment.txt
 
       - name: Post PhpMetrics comment to PR
         if: github.event_name == 'pull_request'
