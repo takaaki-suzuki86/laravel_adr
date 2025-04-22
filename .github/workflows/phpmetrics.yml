@@ -28,14 +28,13 @@ jobs:
           tools: composer
 
       - name: Install phpmetrics
-        run: composer global require phpmetrics/phpmetrics
+        run: composer global require phpmetrics/phpmetrics:^2.0
 
       - name: Generate PHP Metrics Report
         run: |
           mkdir -p ./docs/phpmetrics
           php -d memory_limit=-1 ~/.composer/vendor/bin/phpmetrics \
-            --report-html=./docs/phpmetrics \
-            ./app
+            --config=phpmetrics.json
 
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
