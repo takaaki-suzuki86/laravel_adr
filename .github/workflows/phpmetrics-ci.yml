@@ -47,8 +47,7 @@ jobs:
 
       - name: Extract targeted violations
         run: |
-          COUNT=$(xmlstarlet sel -t -v "count(//file/violation)" ./docs/phpmetrics/violations.xml)
-          if [[ "$COUNT" -eq 0 ]]; then
+          if [[ ! -f ./docs/phpmetrics/violations.xml ]]; then
             echo "🎉 No PhpMetrics violations found" > ./phpmetrics-comment.txt
           else
             RULES=("Too complex class code" "Too complex method code")
@@ -67,7 +66,9 @@ jobs:
             -n \
             ./docs/phpmetrics/violations.xml > ./phpmetrics-comment.txt
 
-            if [[ ! -s ./phpmetrics-comment.txt ]]; then
+            if [[ -s ./phpmetrics-comment.txt ]]; then
+              echo "PhpMetrics violations found"
+            else
               echo "🎉 No PhpMetrics violations found" > ./phpmetrics-comment.txt
             fi
           fi
