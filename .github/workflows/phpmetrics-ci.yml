@@ -47,9 +47,11 @@ jobs:
           -m "//file[violation[$XPATH_RULES]]" \
           -v "concat('📄 ', @name)" -n \
           -m "violation[$XPATH_RULES]" \
-          -v "concat('🔸 ', @rule, ' (priority ', @priority, ') at line ', @beginline)" -n \
-          -v "normalize-space(.)" -n \
-          ./docs/phpmetrics/violations.xml | sed 's/\* /- /g' > ./phpmetrics-comment.txt
+          -v "concat('🔸 **', @rule, '** (priority ', @priority, ') at line ', @beginline, '\n')" -n \
+          -v "normalize-space(substring-before(., 'Maybe'))" -n \
+          -v "concat('- ', normalize-space(substring(., string-length(substring-before(., 'Maybe')) + 1)))" -n \
+          -n \
+          ./docs/phpmetrics/violations.xml > ./phpmetrics-comment.txt
 
       - name: Post PhpMetrics comment to PR
         if: github.event_name == 'pull_request'
