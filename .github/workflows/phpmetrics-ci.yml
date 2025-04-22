@@ -17,18 +17,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          tools: composer
-
-      - name: Install PhpMetrics
-        run: composer global require phpmetrics/phpmetrics:^2.0
-
-      - name: Install xmlstarlet
-        run: sudo apt-get update && sudo apt-get install -y xmlstarlet
-
       - name: Check if Modules PHP files are changed
         id: check_modules
         run: |
@@ -42,10 +30,21 @@ jobs:
           echo "modules_changed=true" >> $GITHUB_OUTPUT
           fi
 
-      # 対象差分がなければ終了
-      - name: Skip job if no modules changed
+      - name: Setup PHP
         if: steps.check_modules.outputs.modules_changed == 'true'
-        run: exit 0
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+
+      - name: Install PhpMetrics
+        if: steps.check_modules.outputs.modules_changed == 'true'
+        run: composer global require phpmetrics/phpmetrics:^2.0
+
+      - name: Install xmlstarlet
+        if: steps.check_modules.outputs.modules_changed == 'true'
+        run: sudo apt-get update && sudo apt-get install -y xmlstarlet
+
 
       # 差分ファイルのみをチェックするために、設定ファイルを生成する
       - name: Generate PhpMetrics config for diff files
