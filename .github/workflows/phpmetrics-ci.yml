@@ -43,19 +43,6 @@ jobs:
         run: |
           mkdir -p ./tmp/phpmetrics
           php -d memory_limit=-1 ~/.composer/vendor/bin/phpmetrics \
-            --config=phpmetrics.json
-
-      - name: Extract targeted violations
-        run: |
-          if [[ -s ./phpmetrics-comment.txt ]]; then
-            echo "PhpMetrics violations found"
-          else
-            echo "🎉 No PhpMetrics violations found" > ./phpmetrics-comment.txt
-          fi
-      - name: Generate PhpMetrics Report
-        run: |
-          mkdir -p ./tmp/phpmetrics
-          php -d memory_limit=-1 ~/.composer/vendor/bin/phpmetrics \
             --config=phpmetrics-diff.json
 
       - name: Extract targeted violations
